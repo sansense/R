@@ -8,7 +8,7 @@ tPoint=c(1, 3, 10, 12)
 
 # write the result for individual months for a particular kind of pt (auto| allo| etc.)
 # also write the combined summary (resCombined) results in another file (only summary + annot; no pt data)
-writeResults = function (pt.type, mo) {
+writeResults = function (pt.type, mo, select.genes = NULL) {
   resCombined = ibm.exprs[, NULL] # get only the rownames to intialize the results
   for (i in mo) {
     label = paste(substitute(pt.type), i, "m", sep="")  
@@ -22,10 +22,17 @@ writeResults = function (pt.type, mo) {
     res = cbind(ibm.annot, pts, res.ttest)
     #res1 = data.frame(lapply(res, function(x) (unlist(x)))) # remove the list element so as to write it properly
     write.table(res, file=paste(label, ".txt", sep=""), sep="\t", col.names=NA)
+    
+    # if genes has to be selected
+    if(!is.null(select.genes)) {
+      res.selected = resSelected(res, select.genes)
+      write.table(res.selected, file=paste(label, ".selected.txt", sep=""), sep="\t", col.names=NA)
+    }
   }
   
-  fname = paste(substitute(pt.type), paste(mo, collapse=""), ".combined", sep="")
+  fname = paste(substitute(pt.type), paste(mo, collapse="_"), "m.combined.txt", sep="")
   write.table(resCombined, file=fname, sep="\t", col.names=NA)
+  
 }   
 
 
@@ -80,4 +87,22 @@ my.ttest = function (dat, name="") {
   return(myt)
 }
 
+# returns selected genes only from the whole (or annotation)
+# res = result (w/ or only the annot)
+# to.select.genes = gene names (vector) to be grep'ed. In our case, a space will be added before the gn, so as to look for a word begining with that gn. Normal grep can match even in the middle of word. Next iteration will be a better way to search it using regex.
+
+resSelected = function(res, to.select.genes) {
+  to.select.genes = paste(" ", to.select.genes, sep="") # only take those where gname is the start of wor
+  s.index = sapply(to.select.genes, grep, res$geneassignment, ignore.case=T)  # sapply gives the gene-name as the names of list-element. Still have to figure out how sapply works as I was expecting a matrix-sort of op. In any case, sapply is better than lapply as the names of genes are included in the op (and this seems to be the only diff between sapply and lapply!)
+  
+  # which genes were not found?
+  s.index.length = sapply(s.index, length) # how many matches for each gene? ( == length of vector)
+  missing.genes = names(s.index.length[!(s.index.length)])
+  cat("missing genes:", missing.genes, "\n")
+  
+  s.genes = lapply(s.index, function (x) res[x,]) # here sapply gives crazy results!
+  s.genes = as.data.frame(do.call(rbind, s.genes)) # convert that to a data.frame
+  
+  return(s.genes)
+}
 
