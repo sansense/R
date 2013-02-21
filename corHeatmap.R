@@ -7,8 +7,7 @@ corHeatmap = function (heat) {
 require("ggplot2")
 require("reshape2")
 require("RColorBrewer")
-  
-  
+    
 #calculate the correlation matrix
 corData=cor(heat)
 #save the colnames for later restoring the correct order
@@ -28,7 +27,13 @@ zp1 <- zp1 + coord_equal()
 zp1 <- zp1 + scale_x_discrete(label=colOrig, name="")
 zp1 <- zp1 + scale_y_discrete(label=colOrig, name="")
 #zp1 <- zp1 + opts(axis.text.x=theme_text(angle=-90, hjust=.5))
-zp1 <- zp1 + opts(axis.text.x=theme_text(angle=-90))
-zp1 <- zp1 + opts(title="Correlation Heatmap")                  
+
+# The deprecated items below are updated
+#zp1 <- zp1 + theme(axis.text.x=theme_text(angle=-90))
+#zp1 <- zp1 + opts(title="Correlation Heatmap")   
+zp1 <- zp1 + theme(axis.text.x = element_text(angle=-90))
+zp2 <- zp1 + ggtitle("Correlation Heatmap")
+
+               
 return(zp1)
 }
